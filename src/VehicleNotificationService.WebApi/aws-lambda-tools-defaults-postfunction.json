@@ -1,0 +1,9 @@
+{
+	"Information": [ "" ],
+	"profile": "playpenprofile",
+	"region": "eu-west-2",
+	"configuration": "Release",
+	"framework": "netcoreapp2.1",
+	"function-handler": "VehicleNotificationService.WebApi::VehicleNotificationService.WebApi.ApiGatewayHandler::PostHandler",
+	"function-name": "VehicleNotificationService.WebApi.ApiGatewayHandler::PostHandler"
+}

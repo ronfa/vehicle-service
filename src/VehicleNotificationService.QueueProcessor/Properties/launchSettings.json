@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Mock Lambda Test Tool": {
+      "commandName": "Executable",
+      "commandLineArgs": "--port 5050",
+      "executablePath": "%USERPROFILE%\\.dotnet\\tools\\dotnet-lambda-test-tool-2.1.exe",
+      "workingDirectory": ".\\bin\\$(Configuration)\\netcoreapp2.1",
+      "environmentVariables": {
+        "Application__Version": "1.0.0",
+        "Application__Environment": "Dev",
+        "Api__BaseUrl": "http://orchestration.dev.parkmobile.nl/ping",
+        "LAMBDA_NET_SERIALIZER_DEBUG": "true"
+      }
+    }
+  }
+}

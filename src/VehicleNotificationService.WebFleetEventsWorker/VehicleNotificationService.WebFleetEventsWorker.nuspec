@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>VehicleNotificationService.WebFleetEventsWorker</id>
+        <version>$version$</version>
+        <authors>Parkmobile</authors>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>VehicleNotificationService WebFleetEventsWorker</description>
+    </metadata>
+    <files> 
+        <file src="..\..\publish\VehicleNotificationService.WebFleetEventsWorker\" target="bin" /> 
+        <file src="*.ps1"   />
+    </files>
+</package>

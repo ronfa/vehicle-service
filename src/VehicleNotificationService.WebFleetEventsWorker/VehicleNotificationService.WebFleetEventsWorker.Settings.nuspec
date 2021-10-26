@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>VehicleNotificationService.WebFleetEventsWorker.Settings</id>
+    <version>$version$</version>
+    <authors>ParkNow</authors>
+    <description>Deploy settings</description>
+    <language>en-US</language>
+  </metadata>
+  <files>
+    <file src="config\*dev*.json" target="dev" />
+    <file src="config\*test*.json" target="test" />
+    <file src="config\*sit*.json" target="sit" />
+    <file src="config\*preprod*.json" target="preprod" />
+    <file src="config\*prod*.json" target="production" />
+  </files>
+</package>

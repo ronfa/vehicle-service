@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "VehicleNotificationService.EventHubWorker": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "dev"
+      }
+    }
+  }
+}

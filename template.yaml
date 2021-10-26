@@ -1,0 +1,574 @@
+---
+# yamllint disable rule:line-length
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+
+Description: |
+  The vehicle notification service consists of an endpopint/queue/processor. 
+  Vehicle events from external parties are being received, queued and processed
+  against the Phonixx management api (for auto-stop / auto-start parking)
+Parameters:
+  ApiGatewayDebugLogging:
+    Type: String
+    Default: false
+    AllowedValues:
+      - false
+      - true
+    Description: Enable ApiGateway Debug Logging
+
+  ApiGatewayDomainCertificateArn:
+    Type: String
+    Description: Api Gateway Domain Certificate Arn
+
+  ApiGatewayDomainName:
+    Type: String
+    Description: S3 bucket name to log to the access logs for the bucket created within S3BucketTemplateUrl
+
+  AppEnvironment:
+    Type: String
+    Description: "This is the application environment value that will be set as the environment variable value for application__environment. This parameter is introduced because there is a mismatch between AWS Infra environment \"prod\" and .NET Application environment \"Production\"."
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - local
+      - dev
+      - test
+      - sit
+      - preprod
+      - prod
+    Description: Environment
+
+  KmsKeyArn:
+    Type: String
+    Description: CMK ARN to encrypt S3 buckets and/or SSM Parameters
+
+  ACMCertificateStackUrl:
+    Type: String
+    Description: ACM template creation nested stack reference. This should be a constant value defined in deployment system (octodeploy). All nested stack definitions are stored in dedicated bucket in px-automation account.
+    Default: https://s3.amazonaws.com/px-automation-cloudformation-stacks/templates/acm/latest/acm.yaml
+
+  Route53StackUrl:
+    Type: String
+    Description: Route53 template creation nested stack reference. This should be a constant value defined in deployment system (octodeploy). All nested stack definitions are stored in dedicated bucket in px-automation account.
+    Default: https://s3.amazonaws.com/px-automation-cloudformation-stacks/templates/route53/latest/route53.yaml
+
+  LambdaLogSetupStackUrl:
+    Type: String
+    Description: Lambda Logging Setup nested stack reference. This should be a constant value defined in deployment system (octodeploy). All nested stack definitions are stored in dedicated bucket in px-automation account.
+    Default: https://s3.amazonaws.com/px-automation-cloudformation-stacks/templates/lambdaLogConfig/latest/lambdaLogConfig.yaml
+  LambdaRoleTemplateUrl:
+    Type: String
+    Description: Lambda Role creation nested stack reference. This should be a constant value defined in deployment system (octodeploy). All nested stack definitions are stored in dedicated bucket in px-automation account.
+    Default: https://s3.amazonaws.com/px-automation-cloudformation-stacks/templates/lambdaRole/latest/lambdaRole.yaml
+  SecurityGroupIds:
+    Type: CommaDelimitedList
+    Default: ""
+    Description: Security Group IDs that Lambda will use
+
+  LambdaTracingMode:
+    Type: String
+    Default: PassThrough
+    Description: Tracing mode for all the lambda functions in the solution. The default value depends on the solution that is being developed.
+
+  LambdaVpcAccess:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - false
+      - true
+    Description: "Extends or not the Lambda's execution IAM Role with VPC access"
+
+  LambdaVpcId:
+    Type: String
+    Default: ""
+    Description: VPC ID that Lambda will run into
+
+  SubnetIds:
+    Type: CommaDelimitedList
+    Default: ""
+    Description: VPC Subnet IDs that Lambda will run into (min 2 for HA)
+
+  Owner:
+    Type: String
+    Description: Version information
+
+  Platform:
+    Type: String
+    Default: bic
+    AllowedValues:
+      - bloxx
+      - bic
+      - parknow
+    Description: platform information
+
+  QueueTemplateUrl:
+    Type: String
+    Description: Queue creation nested stack reference. This should be a constant value defined in deployment system (octodeploy). All nested stack definitions are stored in dedicated bucket in px-automation account.
+    Default: https://s3.amazonaws.com/px-automation-cloudformation-stacks/templates/queue/latest/queue.yaml
+  S3Versioning:
+    Type: String
+    Default: true
+    Description: Enable/Disable versioning
+
+  SnsTopicName:
+    Type: String
+    Default: topic
+    Description: Main SNS Topic name
+
+  SourceARNsToAllowSQSUsage:
+    Type: String
+    Default: ""
+    Description: This will allow the ARNs to be able to use SQS Queue. This should be a comma separated list of strings.
+
+  SqsHandlerFunctionName:
+    Type: String
+    Default: queue2processor
+    Description: Local variable. This definition is needed since the function name will be both used in the lambda function definition and lambda log setup nested stack.
+
+  BackChannelSqsHandlerFunctionName:
+    Type: String
+    Default: backchannelservice
+    Description: Local variable. This definition is needed since the function name will be both used in the lambda function definition and lambda log setup nested stack.
+
+  SqsQueueName:
+    Type: String
+    Default: queue2
+    Description: Main Sqs Queue Name
+
+  BackChannelSqsQueueName:
+    Type: String
+    Default: backchannel
+    Description: BackChannel Sqs Queue Name
+
+  Subsystem:
+    Type: String
+    Description: Subsystem information
+
+  System:
+    Type: String
+    Description: System information
+  
+  Version:
+    Type: String
+    Description: Version information
+
+  PostMessageReceiverFunctionName:  
+    Type: String
+    Default: postendpoint
+    Description: Local variable. This definition is needed since the function name will be both used in the lambda function definition and lambda log setup nested stack.
+
+Conditions:
+  DevEnv: !Or [!Equals [!Ref Environment, dev], !Equals [!Ref Environment, local]]
+  IsProdOrPreprodEnvironment: !Or [!Equals [!Ref Environment, prod], !Equals [!Ref Environment, preprod]]
+  IsNotDevEnvironment: !Not [!Equals [!Ref Environment, dev]]
+  XRayEnabled: !Or [ !Equals [!Ref LambdaTracingMode, 'active'], !Equals [!Ref LambdaTracingMode, 'Active'] ]
+  HasVpcAccess:  !Equals [!Ref LambdaVpcAccess, 'true']
+  enableLogSetup: !Or [!Equals [!Ref Environment, preprod],!Equals [!Ref Environment, prod]]
+  hasSnsTopicName: !Not [!Equals [!Ref SnsTopicName, ""]]
+
+Globals:
+  Function:
+    Environment:
+      Variables:
+        Application__Environment: !Ref AppEnvironment
+        Application__MachineName: Lambda
+        Application__Platform: !Ref Platform
+        Application__Subsystem: !Ref Subsystem
+        Application__System: !Ref System
+        Application__Version: !Ref Version
+        XrayTracing__Enabled: !If
+          - XRayEnabled
+          - "true"
+          - "false"
+
+Resources:
+  WebApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      EndpointConfiguration: REGIONAL
+      Cors:
+        AllowMethods: "'POST'"
+      TracingEnabled: false
+
+  SNSTopic:
+    Type: "AWS::SNS::Topic"
+    Condition: hasSnsTopicName
+    Properties:
+      TopicName: !Join
+        - "-"
+        - - Ref: Environment
+          - Ref: Platform
+          - Ref: System
+          - Ref: Subsystem
+          - Ref: SnsTopicName
+
+  MainSQSQueueFunctionLogSetup:
+    Type: "AWS::CloudFormation::Stack"
+    Condition: enableLogSetup
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        FunctionName: !Join
+          - "-"
+          - - Ref: Environment
+            - Ref: Platform
+            - Ref: System
+            - Ref: Subsystem
+            - Ref: SqsHandlerFunctionName
+        Platform: !Ref Platform
+      TemplateURL: !Ref LambdaLogSetupStackUrl
+      TimeoutInMinutes: 2
+
+  PostWebApiFunctionLogSetup:
+    Type: "AWS::CloudFormation::Stack"
+    Condition: enableLogSetup
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        FunctionName: !Join
+          - "-"
+          - - Ref: Environment
+            - Ref: Platform
+            - Ref: System
+            - Ref: Subsystem
+            - Ref: PostMessageReceiverFunctionName
+        Platform: !Ref Platform
+      TemplateURL: !Ref LambdaLogSetupStackUrl
+      TimeoutInMinutes: 2
+
+  BackChannelSQSQueueFunctionLogSetup:
+    Type: "AWS::CloudFormation::Stack"
+    Condition: enableLogSetup
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        FunctionName: !Join
+          - "-"
+          - - Ref: Environment
+            - Ref: Platform
+            - Ref: System
+            - Ref: Subsystem
+            - Ref: BackChannelSqsHandlerFunctionName
+        Platform: !Ref Platform
+      TemplateURL: !Ref LambdaLogSetupStackUrl
+      TimeoutInMinutes: 2
+
+  Certificate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref ACMCertificateStackUrl
+      TimeoutInMinutes: 30
+      Parameters:
+        DomainName: !Ref ApiGatewayDomainName
+
+  DnsRecord:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref Route53StackUrl
+      TimeoutInMinutes: 2
+      Parameters:
+        Name: !Ref ApiGatewayDomainName
+        Value: !GetAtt GatewayDomain.RegionalDomainName
+
+  GatewayDomain:
+    Type: "AWS::ApiGateway::DomainName"
+    Properties:
+      DomainName: !Ref ApiGatewayDomainName
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !GetAtt Certificate.Outputs.CertificateArn
+
+  BasePathMapping:
+    Type: "AWS::ApiGateway::BasePathMapping"
+    DependsOn:
+      - GatewayDomain
+      - WebApiStage
+    Properties:
+      DomainName: !Ref ApiGatewayDomainName
+      RestApiId: !Ref WebApi
+      Stage: !Ref Environment  
+      
+  APILambdaRoleStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      Parameters:
+        Environment: !Ref Environment
+        KmsKeyArn: !Ref KmsKeyArn
+        LambdaVPCaccess: !Ref LambdaVpcAccess
+        Platform: !Ref Platform
+        Subsystem: !Ref Subsystem
+        System: !Ref System
+      TemplateURL: !Ref LambdaRoleTemplateUrl
+      TimeoutInMinutes: 2
+
+  QueueStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      Parameters:
+        Name: !Ref SqsQueueName
+        #DeadLetterMaxReceiveCount: 5
+        Environment: !Ref Environment
+        Owner: !Ref Owner
+        Platform: !Ref Platform
+        SQSPolicyPermittedSourceARNs: !If
+          - hasSnsTopicName
+          - "Fn::Join":
+              - ","
+              - - Ref: SNSTopic
+                - Ref: SourceARNsToAllowSQSUsage
+          - Ref: SourceARNsToAllowSQSUsage
+        Subsystem: !Ref Subsystem
+        System: !Ref System
+      TemplateURL: !Ref QueueTemplateUrl
+      TimeoutInMinutes: 2
+  
+  BackChannelQueueStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      Parameters:
+        Name: !Ref BackChannelSqsQueueName
+        #DeadLetterMaxReceiveCount: 5
+        Environment: !Ref Environment
+        Owner: !Ref Owner
+        Platform: !Ref Platform
+        SQSPolicyPermittedSourceARNs: !If
+          - IsNotDevEnvironment
+          -
+            !Join
+              - ','
+              - - Fn::ImportValue: !Sub "${Environment}-${Platform}-phonixx-phonixx--pn-events-sns-topic"
+                - Fn::ImportValue: !Sub "${Environment}-${Platform}-phonixx-phonixx--be-events-sns-topic"
+                - Fn::ImportValue: !Sub "${Environment}-${Platform}-phonixx-phonixx--nluk-events-sns-topic"
+                - Fn::ImportValue: !Sub "${Environment}-${Platform}-phonixx-phonixx--pl-events-sns-topic"
+          - Ref: SourceARNsToAllowSQSUsage
+        Subsystem: !Ref Subsystem
+        System: !Ref System
+      TemplateURL: !Ref QueueTemplateUrl
+      TimeoutInMinutes: 2
+
+  QueueSubscription:
+    Type: "AWS::SNS::Subscription"
+    DependsOn: SNSTopic
+    Properties:
+      Endpoint: !GetAtt QueueStack.Outputs.QueueArn
+      Protocol: sqs
+      RawMessageDelivery: true
+      Region: !Sub "${AWS::Region}"
+      TopicArn: !Ref SNSTopic
+
+  PhonixxPnSnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Condition: IsNotDevEnvironment
+    Properties:
+      Protocol: sqs
+      TopicArn:
+        Fn::ImportValue:
+          !Sub "${Environment}-${Platform}-phonixx-phonixx--pn-events-sns-topic"
+      Endpoint: !Sub ${BackChannelQueueStack.Outputs.QueueArn}
+      RawMessageDelivery: true
+      FilterPolicy:
+        TrackingProvider:
+         - 'Webfleet'
+        Event:
+         - "BackgroundJobs.ParkingAction.Activated"
+         - "BackgroundJobs.ParkingAction.Deactivated"
+         - "Account.Vehicle.Added"
+         - "Account.Vehicle.Removed"
+         - "Account.Vehicle.Updated"
+        Version:
+         - '1'
+         - '2'
+
+  PhonixxBeSnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Condition: IsNotDevEnvironment
+    Properties:
+      Protocol: sqs
+      TopicArn:
+        Fn::ImportValue:
+          !Sub "${Environment}-${Platform}-phonixx-phonixx--be-events-sns-topic"
+      Endpoint: !Sub ${BackChannelQueueStack.Outputs.QueueArn}
+      RawMessageDelivery: true
+      FilterPolicy:
+        TrackingProvider:
+         - 'Webfleet'
+        Event:
+         - "BackgroundJobs.ParkingAction.Activated"
+         - "BackgroundJobs.ParkingAction.Deactivated"
+         - "Account.Vehicle.Added"
+         - "Account.Vehicle.Removed"
+         - "Account.Vehicle.Updated"
+        Version:
+         - '1'
+         - '2'
+
+  PhonixxPlSnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Condition: IsNotDevEnvironment
+    Properties:
+      Protocol: sqs
+      TopicArn:
+        Fn::ImportValue:
+          !Sub "${Environment}-${Platform}-phonixx-phonixx--pl-events-sns-topic"
+      Endpoint: !Sub ${BackChannelQueueStack.Outputs.QueueArn}
+      RawMessageDelivery: true
+      FilterPolicy:
+        TrackingProvider:
+         - 'Webfleet'
+        Event:
+         - "BackgroundJobs.ParkingAction.Activated"
+         - "BackgroundJobs.ParkingAction.Deactivated"
+         - "Account.Vehicle.Added"
+         - "Account.Vehicle.Removed"
+         - "Account.Vehicle.Updated"
+        Version:
+         - '1'
+         - '2'
+
+  PhonixxNlukSnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Condition: IsNotDevEnvironment
+    Properties:
+      Protocol: sqs
+      TopicArn:
+        Fn::ImportValue:
+          !Sub "${Environment}-${Platform}-phonixx-phonixx--nluk-events-sns-topic"
+      Endpoint: !Sub ${BackChannelQueueStack.Outputs.QueueArn}
+      RawMessageDelivery: true
+      FilterPolicy:
+        TrackingProvider:
+         - 'Webfleet'
+        Event:
+         - "BackgroundJobs.ParkingAction.Activated"
+         - "BackgroundJobs.ParkingAction.Deactivated"
+         - "Account.Vehicle.Added"
+         - "Account.Vehicle.Removed"
+         - "Account.Vehicle.Updated"
+        Version:
+         - '1'
+         - '2'
+
+  MainSQSQueueFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ./artifacts/VehicleNotificationService.QueueProcessor.zip
+      Environment:
+        Variables:
+          TARGET_QUEUE_URL: !Sub ${QueueStack.Outputs.QueueUrl}
+          DEADLETTER_QUEUE_URL: !Sub "${QueueStack.Outputs.QueueUrl}-deadletter"
+          Api__BaseUrl: !Sub "https://${WebApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
+          Application__Name: !Ref SqsHandlerFunctionName
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            BatchSize: 10
+            Queue: !GetAtt QueueStack.Outputs.QueueArn
+      FunctionName: !Join
+        - "-"
+        - - Ref: Environment
+          - Ref: Platform
+          - Ref: System
+          - Ref: Subsystem
+          - Ref: SqsHandlerFunctionName
+      Handler: "VehicleNotificationService.QueueProcessor::VehicleNotificationService.QueueProcessor.SqsHandler::HandleSQSEvent"
+      MemorySize: 1024
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt APILambdaRoleStack.Outputs.RoleArn
+      Runtime: dotnetcore3.1
+      Timeout: 30
+      Tracing: Active
+      VpcConfig: !If
+        - HasVpcAccess
+        - SecurityGroupIds: !Ref SecurityGroupIds
+          SubnetIds: !Ref SubnetIds
+        - Ref: "AWS::NoValue"
+
+  PostMessageReceiverFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ./artifacts/VehicleNotificationService.WebApi.zip
+      Environment:
+        Variables:
+          Application__Name: !Ref PostMessageReceiverFunctionName
+          TARGET_QUEUE_URL: !Sub ${QueueStack.Outputs.QueueUrl}
+      Events:
+        HeadEndpoint:
+          Type: Api
+          Properties:
+            Method: HEAD
+            Path: /event
+            RestApiId: !Ref WebApi
+        PostEndpoint:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /event
+            RestApiId: !Ref WebApi
+        GetEndpoint:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /event
+            RestApiId: !Ref WebApi
+      FunctionName: !Join
+        - "-"
+        - - Ref: Environment
+          - Ref: Platform
+          - Ref: System
+          - Ref: Subsystem
+          - Ref: PostMessageReceiverFunctionName
+      Handler: "VehicleNotificationService.WebApi::VehicleNotificationService.WebApi.ApiGatewayHandler::PostHandler"
+      MemorySize: 512
+      ReservedConcurrentExecutions: 2
+      Role: !GetAtt APILambdaRoleStack.Outputs.RoleArn
+      Runtime: dotnetcore3.1
+      Timeout: 5
+      Tracing: !Ref LambdaTracingMode
+
+  BackChannelSQSQueueFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ./artifacts/VehicleNotificationService.QueueProcessor.zip
+      Environment:
+        Variables:
+          TARGET_QUEUE_URL: !Sub ${BackChannelQueueStack.Outputs.QueueUrl}
+          DEADLETTER_QUEUE_URL: !Sub "${BackChannelQueueStack.Outputs.QueueUrl}-deadletter"
+          Application__Name: !Ref BackChannelSqsHandlerFunctionName
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            BatchSize: 10
+            Queue: !GetAtt BackChannelQueueStack.Outputs.QueueArn
+      FunctionName: !Join
+        - "-"
+        - - Ref: Environment
+          - Ref: Platform
+          - Ref: System
+          - Ref: Subsystem
+          - Ref: BackChannelSqsHandlerFunctionName
+      Handler: "VehicleNotificationService.QueueProcessor::VehicleNotificationService.QueueProcessor.SqsHandler::HandleBackChannelSQSEventAsync"
+      MemorySize: 1024
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt APILambdaRoleStack.Outputs.RoleArn
+      Runtime: dotnetcore3.1
+      Timeout: 60
+      Tracing: Active
+      VpcConfig: !If
+        - HasVpcAccess
+        - SecurityGroupIds: !Ref SecurityGroupIds
+          SubnetIds: !Ref SubnetIds
+        - Ref: "AWS::NoValue"
+
+Outputs:
+  QueueArn:
+    Description: Url of the new queue
+    Value: !GetAtt QueueStack.Outputs.QueueUrl
+  BackChannelQueue:
+    Value: !Sub ${BackChannelQueueStack.Outputs.QueueUrl}
+    Description: Url of the backchannel queue

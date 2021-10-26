@@ -1,0 +1,17 @@
+---
+Version: "1.0"
+Description: >
+  Vehicle Notification Service
+Platform: parknow
+System: phonixx
+Subsystem: vehicle-notification
+Owner: B2B
+Runtimes:
+  - dotnetcore2.1
+  - dotnetocre3.1
+JiraReference: EUMB-123
+ApplicationTypes:
+  - webapi
+  - backgroundtask
+FQDN: vehiclenotification.parknowportal.com
+CustomerFacing: false

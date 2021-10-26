@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <AWSProjectType>Lambda</AWSProjectType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.1.3" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents " Version="1.0.0" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.31.19" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.3.21" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.6.0" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.7.0" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.49" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+    <PackageReference Include="NewRelic.OpenTracing.AmazonLambda.Tracer" Version="1.1.0" />
+    <PackageReference Include="Overleaf.Logging" Version="2.1.0" />
+    <PackageReference Include="Overleaf.Logging.Lambda" Version="2.1.4" />
+    <PackageReference Include="Overleaf.Lambda" Version="2.0.3" />
+    <PackageReference Include="Overleaf.Lambda.Authentication" Version="2.0.2" />
+    <PackageReference Include="Overleaf.Authentication.WebClient" Version="2.1.1" />
+    <PackageReference Include="Overleaf.Authentication.WebClient.Abstractions" Version="2.1.1" />
+  </ItemGroup>
+   <ItemGroup>
+    <ProjectReference Include="..\VehicleNotificationService.Business\VehicleNotificationService.Business.csproj" />
+  </ItemGroup>
+   <ItemGroup>
+
+    <None Update="config\PostWebApiFunction\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\PostWebApiFunction\appsettings.dev.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\PostWebApiFunction\appsettings.test.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\PostWebApiFunction\appsettings.sit.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\PostWebApiFunction\appsettings.preprod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\PostWebApiFunction\appsettings.prod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Update="config\TokenAuthorizerFunction\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\TokenAuthorizerFunction\appsettings.dev.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\TokenAuthorizerFunction\appsettings.test.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\TokenAuthorizerFunction\appsettings.sit.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\TokenAuthorizerFunction\appsettings.preprod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\TokenAuthorizerFunction\appsettings.prod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+   </ItemGroup>
+</Project>

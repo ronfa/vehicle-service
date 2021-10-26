@@ -1,0 +1,93 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30517.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.WebApi", "src\VehicleNotificationService.WebApi\VehicleNotificationService.WebApi.csproj", "{1DC84BE8-8F1B-4E6F-BAC5-5A286C546031}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.WebApi.Tests", "tests\VehicleNotificationService.WebApi.Tests\VehicleNotificationService.WebApi.Tests.csproj", "{6B1405E9-CA6B-4812-B60A-CB81C9580A77}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.QueueProcessor", "src\VehicleNotificationService.QueueProcessor\VehicleNotificationService.QueueProcessor.csproj", "{2DC84BE8-8F1B-4E6F-BAC5-5A286C546031}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.QueueProcessor.Tests", "tests\VehicleNotificationService.QueueProcessor.Tests\VehicleNotificationService.QueueProcessor.Tests.csproj", "{7B1405E9-CA6B-4812-B60A-CB81C9580A77}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.Business", "src\VehicleNotificationService.Business\VehicleNotificationService.Business.csproj", "{3DC84BE8-8F1B-4E6F-BAC5-5A286C546031}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.Business.Tests", "tests\VehicleNotificationService.Business.Tests\VehicleNotificationService.Business.Tests.csproj", "{8B1405E9-CA6B-4812-B60A-CB81C9580A77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{9F482E0A-E65C-40B9-AB4A-B25EC0F2139A}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{296D1A28-AD46-4DD3-866F-2BCAB14A7E4B}"
+	ProjectSection(SolutionItems) = preProject
+		build.cake = build.cake
+		cloudformation_stack.json = cloudformation_stack.json
+		selfcontained-pack.cake = selfcontained-pack.cake
+		template.yaml = template.yaml
+		vehicle-event-api.yaml = vehicle-event-api.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7B8C2EE0-0A8A-11E9-A538-6FFA7BD039B3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4B8CE00A-BB01-4CC8-9C18-D6BC802EA900}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{E858E7BC-2E29-43B1-969A-E423653C226F}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\DeploymentScript.ps1 = deploy\DeploymentScript.ps1
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleNotificationService.WebFleetEventsWorker", "src\VehicleNotificationService.WebFleetEventsWorker\VehicleNotificationService.WebFleetEventsWorker.csproj", "{6BA3F5D9-A24E-4BA7-AAA9-AE7CD123DF3F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B1405E9-CA6B-4812-B60A-CB81C9580A77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B1405E9-CA6B-4812-B60A-CB81C9580A77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B1405E9-CA6B-4812-B60A-CB81C9580A77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B1405E9-CA6B-4812-B60A-CB81C9580A77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B1405E9-CA6B-4812-B60A-CB81C9580A77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B1405E9-CA6B-4812-B60A-CB81C9580A77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B1405E9-CA6B-4812-B60A-CB81C9580A77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B1405E9-CA6B-4812-B60A-CB81C9580A77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DC84BE8-8F1B-4E6F-BAC5-5A286C546031}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B1405E9-CA6B-4812-B60A-CB81C9580A77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B1405E9-CA6B-4812-B60A-CB81C9580A77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B1405E9-CA6B-4812-B60A-CB81C9580A77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B1405E9-CA6B-4812-B60A-CB81C9580A77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BA3F5D9-A24E-4BA7-AAA9-AE7CD123DF3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BA3F5D9-A24E-4BA7-AAA9-AE7CD123DF3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BA3F5D9-A24E-4BA7-AAA9-AE7CD123DF3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BA3F5D9-A24E-4BA7-AAA9-AE7CD123DF3F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1DC84BE8-8F1B-4E6F-BAC5-5A286C546031} = {7B8C2EE0-0A8A-11E9-A538-6FFA7BD039B3}
+		{6B1405E9-CA6B-4812-B60A-CB81C9580A77} = {4B8CE00A-BB01-4CC8-9C18-D6BC802EA900}
+		{2DC84BE8-8F1B-4E6F-BAC5-5A286C546031} = {7B8C2EE0-0A8A-11E9-A538-6FFA7BD039B3}
+		{7B1405E9-CA6B-4812-B60A-CB81C9580A77} = {4B8CE00A-BB01-4CC8-9C18-D6BC802EA900}
+		{3DC84BE8-8F1B-4E6F-BAC5-5A286C546031} = {7B8C2EE0-0A8A-11E9-A538-6FFA7BD039B3}
+		{8B1405E9-CA6B-4812-B60A-CB81C9580A77} = {4B8CE00A-BB01-4CC8-9C18-D6BC802EA900}
+		{6BA3F5D9-A24E-4BA7-AAA9-AE7CD123DF3F} = {7B8C2EE0-0A8A-11E9-A538-6FFA7BD039B3}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F6D1803A-F61C-4C29-A564-2BCB2ADB9637}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,9 @@
+{
+  "PostWebApiFunction": {
+    "Queue__SampleQueue__Url": "sam_local_var",
+    "Application__Name": "PostWebApiFunction",
+	  "Application__Version": "1.0.0",
+	  "Application__Environment": "dev",
+	  "Application__MachineName": "Lambda"
+  }
+}

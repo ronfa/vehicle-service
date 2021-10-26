@@ -1,0 +1,127 @@
+openapi: 3.0.1
+info:
+  title: Vehicle notification service
+  description: Exposes an endpoint to receive real-time vehicle events from external parties
+  termsOfService: None
+  contact:
+    name: Parknow - B2B Team
+  version: v1.0
+servers:
+- url: https://webapi-vehicle.test.parknowportal.com
+
+paths:
+  /event:
+    post:
+      tags:
+      - VehicleEvent
+      summary: | 
+        "This endpoint uses ApiKey VehicleEventApiKey for authorization. 
+        It receives a message including vehicle identification and event details, 
+        then forwards the message to a queue for further processing and validation
+        against the Phonixx management api"
+      operationId: EventPost
+      requestBody:
+        description: The vehicle event.
+        content:
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/VehicleEvent'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleEvent'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/VehicleEvent'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/VehicleEvent'
+        required: false
+      responses:
+        200:
+          description: | 
+            'Success: the request succeeded and the message has been
+            delievered to queue successfully.'
+          content:
+            application/json:
+              schema:
+                type: string
+              example: OK
+        400:
+          description: 'Bad request: the server was unable to process the request due to missing / incorrect input.'
+          content: {}
+        401:
+          description: | 
+            'Unauthorized: the server was unable to process the request, due to a missing or incorrect authorization header.'
+          content: {}
+        403:
+          description: |
+           'Forbidden: the server was unable to process the request, your authorization does not allow this action.'
+          content: {}
+        500:
+          description: | 
+            'Internal server error: the server was unable to process the request, due to an internal server error.'
+          content: {}
+        default:
+          description: Unexpected error
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostWebApiFunction.Arn}/invocations
+        credentials:
+          Fn::Sub: ${APILambdaRoleStack.Outputs.RoleArn}
+        responses: {}
+        httpMethod: "POST"
+        type: "aws_proxy"
+      x-amazon-apigateway-api-key-source : "HEADER"
+      x-codegen-request-body-name: request
+      security:
+        - Bearer: []
+
+components:
+  schemas:
+    VehicleEventDetail:
+      required:
+      - name
+      - value
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+      example:
+        name: ClientId
+        value: 123456
+    VehicleEvent:
+      required:
+      - licenseplate
+      - countrycode
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        licenseplate:
+          type: string
+        countrycode:
+          type: string
+        brand:
+          type: string
+        sourceapplication:
+          type: string
+        requestItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleEventDetail'
+      example:
+        timestamp: "2021-03-12T17:01:48.4396885+01:00"
+        licenseplate: RR-TT-DD
+        countrycode: NL
+        brand: Parkmobile
+        sourceapplication: HappyFleetCo
+
+  securitySchemes:
+    Bearer:
+      type: apiKey
+      description: Please paste JWT Token with Bearer + White Space + Token into field
+      name: Authorization
+      in: header
